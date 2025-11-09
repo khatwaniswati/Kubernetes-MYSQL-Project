@@ -1,0 +1,41 @@
+services:
+  product-db:
+    image: mysql
+    container_name: product-db
+    environment:
+      MYSQL_DATABASE: product-db
+      MYSQL_USER: swati
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - product-db-data:/var/lib/mysql
+    networks:
+      - myNetwork
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "swati", "-ppassword" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  product-service:
+    build: .
+    container_name: product-service
+    ports:
+      - "8080:8080"
+    networks:
+      - myNetwork
+    depends_on:
+      product-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://product-db:3306/product-db?allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: swati
+      SPRING_DATASOURCE_PASSWORD: password
+
+volumes:
+  product-db-data:
+
+networks:
+  myNetwork:
